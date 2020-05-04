@@ -1,3 +1,12 @@
+# google-kms-node-jws
+
+## A close-as-possible replacement for the node-jws library to let you use Google Cloud KMS
+
+No changes yet - first up is signing
+
+
+# Forked from:
+
 # node-jws [![Build Status](https://secure.travis-ci.org/brianloveswords/node-jws.svg)](http://travis-ci.org/brianloveswords/node-jws)
 
 An implementation of [JSON Web Signatures](http://self-issued.info/docs/draft-ietf-jose-json-web-signature.html).
