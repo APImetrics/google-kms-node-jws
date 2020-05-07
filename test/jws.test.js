@@ -50,19 +50,19 @@ const payload = {
 };
 
 BITS.forEach(function (bits) {
-  test('HMAC using SHA-'+bits+' hash algorithm', function (t) {
+  test('HMAC using SHA-'+bits+' hash algorithm', async function (t) {
     const alg = 'HS'+bits;
     const header = { alg: alg, typ: 'JWT' };
     const secret = 'sup';
-    const jwsObj = jws.sign({
+    const jwsObj = await jws.sign({
       header: header,
       payload: payload,
       secret: secret,
       encoding: 'utf8',
     });
     const parts = jws.decode(jwsObj);
-    t.ok(jws.verify(jwsObj, alg, secret), 'should verify');
-    t.notOk(jws.verify(jwsObj, alg, 'something else'), 'should not verify with non-matching secret');
+    t.ok(await jws.verify(jwsObj, alg, secret), 'should verify');
+    t.notOk(await jws.verify(jwsObj, alg, 'something else'), 'should not verify with non-matching secret');
     t.same(parts.payload, payload, 'should match payload');
     t.same(parts.header, header, 'should match header');
     t.end();
@@ -70,21 +70,21 @@ BITS.forEach(function (bits) {
 });
 
 BITS.forEach(function (bits) {
-  test('RSASSA using SHA-'+bits+' hash algorithm', function (t) {
+  test('RSASSA using SHA-'+bits+' hash algorithm', async function (t) {
     const alg = 'RS'+bits;
     const header = { alg: alg };
     const privateKey = rsaPrivateKey;
     const publicKey = rsaPublicKey;
     const wrongPublicKey = rsaWrongPublicKey;
-    const jwsObj = jws.sign({
+    const jwsObj = await jws.sign({
       header: header,
       payload: payload,
       privateKey: privateKey
     });
     const parts = jws.decode(jwsObj, { json: true });
-    t.ok(jws.verify(jwsObj, alg, publicKey), 'should verify');
-    t.notOk(jws.verify(jwsObj, alg, wrongPublicKey), 'should not verify with non-matching public key');
-    t.notOk(jws.verify(jwsObj, 'HS'+bits, publicKey), 'should not verify with non-matching algorithm');
+    t.ok(await jws.verify(jwsObj, alg, publicKey), 'should verify');
+    t.notOk(await jws.verify(jwsObj, alg, wrongPublicKey), 'should not verify with non-matching public key');
+    t.notOk(await jws.verify(jwsObj, 'HS'+bits, publicKey), 'should not verify with non-matching algorithm');
     t.same(parts.payload, payload, 'should match payload');
     t.same(parts.header, header, 'should match header');
     t.end();
@@ -93,39 +93,39 @@ BITS.forEach(function (bits) {
 
 BITS.forEach(function (bits) {
   const curve = CURVES[bits];
-  test('ECDSA using P-'+curve+' curve and SHA-'+bits+' hash algorithm', function (t) {
+  test('ECDSA using P-'+curve+' curve and SHA-'+bits+' hash algorithm', async function (t) {
     const alg = 'ES'+bits;
     const header = { alg: alg };
     const privateKey = ecdsaPrivateKey[bits];
     const publicKey = ecdsaPublicKey[bits];
     const wrongPublicKey = ecdsaWrongPublicKey[bits];
-    const jwsObj = jws.sign({
+    const jwsObj = await jws.sign({
       header: header,
       payload: payloadString,
       privateKey: privateKey
     });
     const parts = jws.decode(jwsObj);
-    t.ok(jws.verify(jwsObj, alg, publicKey), 'should verify');
-    t.notOk(jws.verify(jwsObj, alg, wrongPublicKey), 'should not verify with non-matching public key');
-    t.notOk(jws.verify(jwsObj, 'HS'+bits, publicKey), 'should not verify with non-matching algorithm');
+    t.ok(await jws.verify(jwsObj, alg, publicKey), 'should verify');
+    t.notOk(await jws.verify(jwsObj, alg, wrongPublicKey), 'should not verify with non-matching public key');
+    t.notOk(await jws.verify(jwsObj, 'HS'+bits, publicKey), 'should not verify with non-matching algorithm');
     t.same(parts.payload, payloadString, 'should match payload');
     t.same(parts.header, header, 'should match header');
     t.end();
   });
 });
 
-test('No digital signature or MAC value included', function (t) {
+test('No digital signature or MAC value included', async function (t) {
   const alg = 'none';
   const header = { alg: alg };
   const payload = 'oh hey José!';
-  const jwsObj = jws.sign({
+  const jwsObj = await jws.sign({
     header: header,
     payload: payload,
   });
   const parts = jws.decode(jwsObj);
-  t.ok(jws.verify(jwsObj, alg), 'should verify');
-  t.ok(jws.verify(jwsObj, alg, 'anything'), 'should still verify');
-  t.notOk(jws.verify(jwsObj, 'HS256', 'anything'), 'should not verify with non-matching algorithm');
+  t.ok(await jws.verify(jwsObj, alg), 'should verify');
+  t.ok(await jws.verify(jwsObj, alg, 'anything'), 'should still verify');
+  t.notOk(await jws.verify(jwsObj, 'HS256', 'anything'), 'should not verify with non-matching algorithm');
   t.same(parts.payload, payload, 'should match payload');
   t.same(parts.header, header, 'should match header');
   t.end();
@@ -139,8 +139,8 @@ test('Streaming sign: HMAC', function (t) {
     secret: secret
   });
   dataStream.pipe(sig.payload);
-  sig.on('done', function (signature) {
-    t.ok(jws.verify(signature, 'HS256', secret), 'should verify');
+  sig.on('done', async function (signature) {
+    t.ok(await jws.verify(signature, 'HS256', secret), 'should verify');
     t.end();
   });
 });
@@ -159,10 +159,10 @@ test('Streaming sign: RSA', function (t) {
     privateKeyStream.pipe(sig.key);
   });
 
-  sig.on('done', function (signature) {
-    t.ok(jws.verify(signature, 'RS256', publicKey), 'should verify');
-    t.notOk(jws.verify(signature, 'RS256', wrongPublicKey), 'should not verify');
-    t.same(jws.decode(signature).payload, readfile('data.txt'), 'got all the data');
+  sig.on('done', async function (signature) {
+    t.ok(await jws.verify(signature, 'RS256', publicKey), 'should verify');
+    t.notOk(await jws.verify(signature, 'RS256', wrongPublicKey), 'should not verify');
+    t.same(await jws.decode(signature).payload, readfile('data.txt'), 'got all the data');
     t.end();
   });
 });
@@ -177,10 +177,10 @@ test('Streaming sign: RSA, predefined streams', function (t) {
     payload: dataStream,
     privateKey: privateKeyStream
   });
-  sig.on('done', function (signature) {
-    t.ok(jws.verify(signature, 'RS256', publicKey), 'should verify');
-    t.notOk(jws.verify(signature, 'RS256', wrongPublicKey), 'should not verify');
-    t.same(jws.decode(signature).payload, readfile('data.txt'), 'got all the data');
+  sig.on('done', async function (signature) {
+    t.ok(await jws.verify(signature, 'RS256', publicKey), 'should verify');
+    t.notOk(await jws.verify(signature, 'RS256', wrongPublicKey), 'should not verify');
+    t.same(await jws.decode(signature).payload, readfile('data.txt'), 'got all the data');
     t.end();
   });
 });
@@ -240,9 +240,9 @@ test('Streaming verify: errors during verify should emit as "error"', function (
 });
 
 if (SUPPORTS_ENCRYPTED_KEYS) {
-  test('Signing: should accept an encrypted key', function (t) {
+  test('Signing: should accept an encrypted key', async function (t) {
     const alg = 'RS256';
-    const signature = jws.sign({
+    const signature = await jws.sign({
       header: { alg: alg },
       payload: 'verifyme',
       privateKey: {
@@ -250,7 +250,7 @@ if (SUPPORTS_ENCRYPTED_KEYS) {
         passphrase: encryptedPassphrase
       }
     });
-    t.ok(jws.verify(signature, 'RS256', rsaPublicKey));
+    t.ok(await jws.verify(signature, 'RS256', rsaPublicKey));
     t.end();
   });
 
@@ -302,15 +302,15 @@ test('jws.decode: with invalid json in body', function (t) {
   t.end();
 });
 
-test('jws.verify: missing or invalid algorithm', function (t) {
+test('jws.verify: missing or invalid algorithm', async function (t) {
   const header = Buffer.from('{"something":"not an algo"}').toString('base64');
   const payload = Buffer.from('sup').toString('base64');
   const sig = header + '.' + payload + '.';
-  try { jws.verify(sig) }
+  try { await jws.verify(sig) }
   catch (e) {
     t.same(e.code, 'MISSING_ALGORITHM');
   }
-  try { jws.verify(sig, 'whatever') }
+  try { await jws.verify(sig, 'whatever') }
   catch (e) {
     t.ok(e.message.match('"whatever" is not a valid algorithm.'));
   }
@@ -318,8 +318,8 @@ test('jws.verify: missing or invalid algorithm', function (t) {
 });
 
 
-test('jws.isValid', function (t) {
-  const valid = jws.sign({ header: { alg: 'HS256' }, payload: 'hi', secret: 'shhh' });
+test('jws.isValid', async function (t) {
+  const valid = await jws.sign({ header: { alg: 'HS256' }, payload: 'hi', secret: 'shhh' });
   const invalid = (function(){
     const header = Buffer.from('oh hei José!').toString('base64');
     const payload = Buffer.from('sup').toString('base64');
