@@ -49,6 +49,14 @@ const payload = {
   value: ['one', 2, 3]
 };
 
+const googleKmsPrivateKey = { 
+  projectId: 'apimetrics-qc', 
+  locationId: 'us-central1', 
+  keyRingId: 'google-kms-node-jwa', 
+  keyId: 'rsa-private', 
+  versionId: '4'
+};
+
 BITS.forEach(function (bits) {
   test('HMAC using SHA-'+bits+' hash algorithm', async function (t) {
     const alg = 'HS'+bits;
@@ -329,4 +337,25 @@ test('jws.isValid', async function (t) {
   t.same(jws.isValid(invalid), false);
   t.same(jws.isValid(valid), true);
   t.end();
+});
+
+[256].forEach(function (bits) {
+  test('Google KMS sign PS using SHA-'+bits+' hash algorithm', async function (t) {
+    const alg = 'PS'+bits;  // Note: using PS here
+    const header = { alg: alg };
+    const wrongPublicKey = rsaWrongPublicKey;
+    const jwsObj = await jws.sign({
+      header: header,
+      payload: payload,
+      privateKey: googleKmsPrivateKey,
+    });
+    const parts = jws.decode(jwsObj, { json: true });
+    t.ok(await jws.verify(jwsObj, alg, googleKmsPrivateKey), 'should verify');
+    t.notOk(await jws.verify(jwsObj, alg, wrongPublicKey), 'should not verify with non-matching public key');
+    // Note using RS below, not HMAC (as no Google support for that)
+    t.notOk(await jws.verify(jwsObj, 'RS'+bits, googleKmsPrivateKey), 'should not verify with non-matching algorithm');
+    t.same(parts.payload, payload, 'should match payload');
+    t.same(parts.header, header, 'should match header');
+    t.end();
+  });
 });
