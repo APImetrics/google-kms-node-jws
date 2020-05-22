@@ -3,3 +3,4 @@ node_modules
 /test/*.pem
 /test/encrypted-key-passphrase
 test/kms
+test/*.der
