@@ -53,8 +53,8 @@ const googleKmsPrivateKey = {
   projectId: 'apimetrics-qc', 
   locationId: 'us-central1', 
   keyRingId: 'google-kms-node-jwa', 
-  keyId: 'rsa-private', 
-  versionId: '4'
+  keyId: 'ec256-private', 
+  versionId: '1'
 };
 
 BITS.forEach(function (bits) {
@@ -340,8 +340,8 @@ test('jws.isValid', async function (t) {
 });
 
 [256].forEach(function (bits) {
-  test('Google KMS sign PS using SHA-'+bits+' hash algorithm', async function (t) {
-    const alg = 'PS'+bits;  // Note: using PS here
+  test('Google KMS sign ES using SHA-'+bits+' hash algorithm', async function (t) {
+    const alg = 'ES'+bits;  // Note: using PS here
     const header = { alg: alg };
     const wrongPublicKey = rsaWrongPublicKey;
     const jwsObj = await jws.sign({
