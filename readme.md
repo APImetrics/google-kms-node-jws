@@ -2,7 +2,9 @@
 
 ## A close-as-possible replacement for the node-jws library to let you use Google Cloud KMS
 
-No changes yet - first up is signing
+JWA is now async, so this is now also an async interface
+
+Release v1 - 2020-05-28
 
 
 # Forked from:
